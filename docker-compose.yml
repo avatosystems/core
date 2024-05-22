@@ -1,0 +1,58 @@
+# Avato Docker Compose File - gets Avato running locally in under five minutes.
+# Set the AVATO_UPDATE_CORE_USERNAME and AVATO_UPDATE_CORE_PASSWORD settings below
+# Visit https://avato.co/one/request for credentials
+services:
+
+  database:
+    image: avato1/maria-db:latest
+    ports:
+      - 3306:3306
+    environment:
+      # These must match the AVATO_ database settings below
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_DATABASE=avato
+      - MYSQL_USER=avato
+      - MYSQL_PASSWORD=password
+    networks:
+      - avato_network
+    volumes:
+      - my-db-data:/var/lib/mysql/data
+    container_name: avato_db
+
+  app:
+    image: avato1/core:edge
+    ports:
+      - 8443:8443
+    environment:
+
+      # NOTE: You must set the following two fields to reference valid Avato credentials
+      - AVATO_UPDATE_CORE_USERNAME=
+      - AVATO_UPDATE_CORE_PASSWORD=
+
+      # These must match the MYSQL_ database settings above
+      - AVATO_DATABASE_HOST=avato_db
+      - AVATO_DATABASE_SCHEMA=avato
+      - AVATO_DATABASE_USERNAME=avato
+      - AVATO_DATABASE_PASSWORD=password
+
+    volumes:
+      - ./packages:/opt/jboss/install/packages
+      - ./properties:/opt/jboss/install/properties
+      - ./staging:/opt/jboss/install/staging
+      - ./core:/opt/jboss/install/core
+      - ./cache:/opt/jboss/install/cache
+
+    networks:
+      - avato_network
+    container_name: avato
+
+networks:
+  avato_network:
+    ipam:
+      driver: default
+
+volumes:
+  my-db-data:
+    driver: local
+
+
